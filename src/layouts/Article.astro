@@ -1,0 +1,156 @@
+---
+import Base from './Base.astro';
+
+interface Props {
+  title: string;
+  date: string | Date;
+  description?: string;
+  minutesRead?: number;
+}
+
+const { frontmatter, title: propTitle, date: propDate, description, minutesRead } = Astro.props;
+const title = propTitle ?? frontmatter?.title;
+const date = propDate ?? frontmatter?.date;
+const dateStr = !date ? '' : date instanceof Date
+  ? date.toISOString().slice(0, 10)
+  : String(date).slice(0, 10);
+---
+
+<Base title={title} description={description}>
+  <div class="container">
+    <p class="back-link"><a href="/writing">&larr; writing</a></p>
+    <h1>{title}</h1>
+    <p class="meta">
+      <span>{dateStr}</span>
+      {typeof minutesRead === 'number' && minutesRead > 0 && (
+        <>
+          <span aria-hidden="true">&middot;</span>
+          <span>{minutesRead} min read</span>
+        </>
+      )}
+    </p>
+
+    <article>
+      <slot />
+    </article>
+  </div>
+</Base>
+
+<style>
+  .container {
+    max-width: 640px;
+    padding-top: 5rem;
+  }
+
+  .back-link {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+
+  .back-link a {
+    color: var(--fg2);
+    text-decoration: none;
+  }
+
+  .back-link a:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 1.5rem 0 1rem;
+    color: var(--fg);
+  }
+
+  .meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--fg2);
+    font-size: 0.85rem;
+    margin: 0;
+    margin-bottom: 1.5rem;
+  }
+
+  article {
+    font-size: 1.1rem;
+    line-height: 1.85;
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+
+  h1 {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  article p {
+    margin: 0 0 1.5rem;
+    color: var(--fg);
+  }
+
+  article h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 2.5rem 0 1rem;
+  }
+
+  article h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 2rem 0 0.75rem;
+  }
+
+  article ul,
+  article ol {
+    margin: 0 0 1.5rem;
+    padding-left: 1.5rem;
+  }
+
+  article li {
+    line-height: 1.8;
+  }
+
+  article blockquote {
+    border-left: 3px solid var(--fg3);
+    padding-left: 1.25rem;
+    color: var(--fg2);
+    font-style: italic;
+    margin: 1.5rem 0;
+  }
+
+  article code {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  article pre {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 1.25rem;
+    overflow-x: auto;
+    margin: 0 0 1.5rem;
+  }
+
+  article pre code {
+    background: transparent;
+    padding: 0;
+    font-size: 0.9rem;
+  }
+
+  article a {
+    color: var(--acc);
+  }
+
+  article a:hover {
+    text-decoration: underline;
+  }
+
+  article hr {
+    border-color: var(--border);
+    margin: 2.5rem 0;
+  }
+</style>

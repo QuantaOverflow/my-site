@@ -1,0 +1,223 @@
+---
+import Base from '../../layouts/Base.astro';
+
+
+const articles = Object.entries(import.meta.glob('./*.md', { eager: true }))
+  .map(([path, article]) => ({
+    href: `/writing/${path.split('/').pop()?.replace(/\.md$/, '')}`,
+    title: article.frontmatter.title,
+    date: new Date(article.frontmatter.date).toISOString().slice(0, 10),
+    description: article.frontmatter.description,
+    tags: article.frontmatter.tags ?? [],
+  }))
+  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+const allTags = [...new Set(articles.flatMap((article) => article.tags))].sort();
+---
+
+<Base title="Writing" description="Articles and notes">
+  <div class="wide">
+    <div class="page-header">
+      <h1>writing</h1>
+      <p class="count">{articles.length} articles</p>
+    </div>
+
+    <div class="search-wrap">
+      <input id="search" type="text" placeholder="Search articles..." autocomplete="off" />
+    </div>
+
+    <div class="tags" id="tags">
+      <button class="tag active" data-tag="all">all</button>
+      {allTags.map((tag) => (
+        <button class="tag" data-tag={tag}>{tag}</button>
+      ))}
+    </div>
+
+    <div class="writing-grid">
+      {articles.map((article) => (
+        <a
+          class="writing-card"
+          href={article.href}
+          data-title={article.title.toLowerCase()}
+          data-tags={article.tags.join(',')}
+        >
+          <h2>{article.title}</h2>
+          <p class="date">{article.date}</p>
+          {article.description && <p class="description">{article.description ?? ''}</p>}
+        </a>
+      ))}
+    </div>
+  </div>
+</Base>
+
+<style>
+  .wide {
+    padding-top: 5rem;
+  }
+
+  .page-header {
+    margin-bottom: 0.9rem;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  .count {
+    margin: 0.35rem 0 0;
+    font-size: 0.85rem;
+    color: var(--fg2);
+  }
+
+  .search-wrap {
+    margin: 2rem 0 1.25rem;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    padding: 1rem 1.75rem;
+    color: var(--fg);
+    font-family: inherit;
+    font-size: 1rem;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .search-wrap input::placeholder {
+    color: var(--fg3);
+  }
+
+  .search-wrap input:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.04);
+    outline: none;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .tag {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    padding: 0.35rem 1rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: var(--fg3);
+    cursor: pointer;
+    outline: none;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    font-family: inherit;
+  }
+
+  .tag:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--fg2);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .tag.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--fg);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .writing-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .writing-card {
+    display: block;
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.04);
+    text-decoration: none;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+
+  .writing-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .writing-card h2 {
+    margin: 0 0 0.4rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--fg);
+  }
+
+  .date {
+    margin: 0 0 0.75rem;
+    font-size: 0.75rem;
+    color: var(--fg2);
+  }
+
+  .description {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--fg2);
+    line-height: 1.6;
+  }
+
+  @media (min-width: 600px) {
+    .writing-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
+
+<script>
+  const input = document.querySelector('#search');
+  const tags = document.querySelector('#tags');
+  const cards = Array.from(document.querySelectorAll('.writing-card'));
+  const tagButtons = Array.from(document.querySelectorAll('.tag'));
+  let activeTag = 'all';
+
+  const applyFilters = () => {
+    const query = (input?.value ?? '').toLowerCase();
+
+    cards.forEach((card) => {
+      const title = (card.getAttribute('data-title') ?? '').toLowerCase();
+      const cardTags = (card.getAttribute('data-tags') ?? '')
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+
+      const matchesSearch = title.includes(query);
+      const matchesTag = activeTag === 'all' || cardTags.includes(activeTag);
+
+      card.style.display = matchesSearch && matchesTag ? '' : 'none';
+    });
+  };
+
+  input?.addEventListener('input', applyFilters);
+  input?.addEventListener('mouseenter', () => input.focus());
+
+  tags?.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement) || !target.classList.contains('tag')) return;
+
+    activeTag = target.dataset.tag ?? 'all';
+
+    tagButtons.forEach((button) => {
+      button.classList.toggle('active', button === target);
+    });
+
+    applyFilters();
+  });
+</script>

@@ -1,17 +1,199 @@
 ---
+import Base from '../layouts/Base.astro';
 
+const articles = Object.entries(import.meta.glob('./writing/*.md', { eager: true }))
+  .map(([path, article]) => ({
+    href: `/writing/${path.split('/').pop()?.replace(/\.md$/, '')}`,
+    title: article.frontmatter.title,
+    date: new Date(article.frontmatter.date).toISOString().slice(0, 10),
+    description: article.frontmatter.description,
+  }))
+  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  .slice(0, 5);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Base title="Home" description="Personal tech and thinking blog">
+  <section class="hero">
+    <div class="hero-overlay">
+      <div class="hero-content">
+        <h1>Shiwenjie</h1>
+        <p class="tagline">Building software, learning in public, and writing to think more clearly.</p>
+        <div class="hero-now">
+          <p class="section-label">now</p>
+          <p>I'm currently working on a small personal tooling project and refining my writing workflow.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wide">
+    <section id="about">
+      <p class="section-label">about</p>
+      <p>
+        I’m a developer who writes about technology, decision-making, and how ideas hold up in real work.
+        This blog is where I keep notes from projects, mistakes, and things I’m still trying to understand.
+      </p>
+    </section>
+
+    <section id="writing">
+      <p class="section-label">writing</p>
+      <div class="writing-grid">
+        {articles.map((article) => (
+          <a class="writing-card" href={article.href}>
+            <h2>{article.title}</h2>
+            <p class="date">{article.date}</p>
+            {article.description && <p class="description">{article.description}</p>}
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="photo-grid">
+      <article class="photo-card">
+        <img src="/images/tokyo-lantern.jpg" alt="Tokyo lantern scene" />
+      </article>
+      <article class="photo-card">
+        <img src="/images/tokyo-garden-window.jpg" alt="Tokyo garden window view" />
+      </article>
+    </section>
+
+    <section>
+      <p class="section-label">links</p>
+      <p><a href="#">GitHub</a> · <a href="#">Twitter/X</a></p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .tagline {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.1rem;
+  }
+
+  .hero {
+    width: 100%;
+    min-height: 100vh;
+    background: url('/images/pexels-photo-3013999.jpeg') center/cover no-repeat;
+  }
+
+  .hero-overlay {
+    min-height: 100vh;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .hero-content {
+    max-width: 640px;
+  }
+
+  .hero-now {
+    margin-top: 2.5rem;
+    text-align: left;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .hero-now .section-label {
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 0.5rem;
+  }
+
+  section {
+    margin-top: 2.5rem;
+  }
+
+  .hero {
+    margin-top: 0;
+  }
+
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .photo-card {
+    overflow: hidden;
+    border-radius: 16px;
+  }
+
+  .photo-card img {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+
+  .photo-card:hover img {
+    transform: scale(1.02);
+  }
+
+  .section-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg3);
+    margin-bottom: 0.75rem;
+  }
+
+  .writing-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .writing-card {
+    display: block;
+    padding: 1.25rem 1.5rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.04);
+    text-decoration: none;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+
+  .writing-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .writing-card h2 {
+    margin: 0 0 0.3rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--fg);
+  }
+
+  .date {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    color: var(--fg2);
+  }
+
+  .description {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--fg2);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 720px) {
+    h1 {
+      font-size: 2.4rem;
+    }
+
+    .photo-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

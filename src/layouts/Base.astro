@@ -1,0 +1,68 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description ?? ''} />
+  </head>
+  <body>
+    <nav>
+      <a class="logo" href="/">SW</a>
+      <div class="nav-links">
+        <a href="/writing">Writing</a>
+      </div>
+    </nav>
+    <slot />
+  </body>
+</html>
+
+<style>
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+  }
+
+  .logo {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .nav-links a {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+  }
+
+  .nav-links a:hover {
+    color: #fff;
+  }
+</style>
