@@ -123,6 +123,77 @@ kline = spider._get("https://stock.xueqiu.com/v5/stock/chart/kline.json",
 请求间隔建议 2–4 秒，加点随机抖动 `random.uniform(2, 4)`。`xq_a_token` 有时效性，脚本跑之前最好重新访问一次首页刷新。嫌麻烦的话直接用 `pysnowball` 库（GitHub 1.7k stars），接口封装得不错。
 
 
+## 遇到 WAF 拦截怎么办
+
+
+如果请求频率偏高或 IP 被标记，雪球会触发阿里云 WAF，具体表现是页面返回「访问验证」滑块，或者 Cookie 里多出来需要动态计算的 `acw_sc__v2`，此时纯 requests 就过不去了。
+
+
+### acw_sc__v2 逆向（纯 requests 可行）
+
+
+这个 Cookie 的生成逻辑是阿里系的经典操作：服务器在页面 JS 里塞一个 `arg1`（十六进制字符串），你要用它跑一段 hexXor + unsbox 计算才能拿到真正的 Cookie 值。逆向社区（如 GitHub spider_reverse 仓库）已经有完整还原代码，大致用法如下：
+
+
+```python
+import re, execjs, requests
+
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "Referer": "https://xueqiu.com/"
+}
+
+# 第一步：拿到包含 arg1 的页面
+resp = requests.get("https://xueqiu.com/today", headers=headers).text
+arg1 = re.search(r"var arg1='([A-F0-9]+)';", resp).group(1)
+
+# 第二步：用逆向出来的 JS 计算 acw_sc__v2
+# xueqiu.js 是本地保存的已逆向 JS 文件（含 unsbox、hexXor、get_cookie 函数）
+with open("xueqiu.js", "r", encoding="utf-8") as f:
+    js_code = f.read()
+acw_sc__v2 = execjs.compile(js_code).call("get_cookie", arg1)
+
+# 第三步：带上 Cookie 正常请求
+cookies = {"acw_sc__v2": acw_sc__v2}
+resp2 = requests.get("https://xueqiu.com/目标API", cookies=cookies, headers=headers)
+```
+
+
+注意两点：JS 文件需要自己从逆向社区获取或调试（文章里有无限 debugger，需要先绕过）；`acw_sc__v2` 有效期较短，建议每次跑脚本前重新计算。另外首次访问还会植入一个 `acw_tc`（有效期约 30 分钟），这个直接带着就行，不需要额外处理。
+
+
+### WAF 滑块验证码（行为验证）
+
+
+如果触发了滑块弹窗，纯逆向就不够用了——阿里的行为验证会检测鼠标轨迹的速度曲线、停顿、加速度，简单 `move_to_element` 直接被识别。需要模拟真人拖动轨迹：
+
+
+```python
+from selenium import webdriver
+from selenium.webdriver.common.action_chains import ActionChains
+import random, time
+
+driver = webdriver.Chrome(options=...)  # 建议加 stealth 插件或用 undetected-chromedriver
+driver.get("https://xueqiu.com/")
+
+# 等滑块出现
+slider = driver.find_element("css selector", "#aliyunCaptcha-sliding-slider")
+offset = 300  # 根据实际滑块宽度调整，或用 OpenCV 模板匹配精确计算
+
+action = ActionChains(driver)
+action.click_and_hold(slider).pause(random.uniform(0.2, 0.5))
+# 分段拖动 + 加入随机抖动，模拟人手的不稳定
+for i in range(10):
+    dx = offset / 10 + random.randint(-2, 2)
+    action.move_by_offset(dx, random.randint(-1, 1)).pause(random.uniform(0.01, 0.03))
+action.release().perform()
+time.sleep(1)  # 等待验证通过
+```
+
+
+轨迹生成用贝塞尔曲线会更自然，通过率大概能到 80% 以上。多次失败就换 IP 重试。这种场景下推荐用 **DrissionPage** 替代 Selenium，它对阿里系检测的规避效果更好，内置了不少反指纹处理。
+
+
 ---
 
 
