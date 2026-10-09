@@ -32,6 +32,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add src/pages/writing/
+          git add src/pages/writing/ public/notion-images/
           git diff --cached --quiet || git commit -m "sync: update articles from Notion"
           git push

@@ -1,14 +1,31 @@
 import { Client } from '@notionhq/client';
 import { NotionToMarkdown } from 'notion-to-md';
-import { writeFileSync, existsSync, readdirSync, unlinkSync } from 'fs';
-import { join, dirname } from 'path';
+import { writeFileSync, existsSync, readdirSync, unlinkSync, mkdirSync } from 'fs';
+import { join, dirname, extname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = join(__dirname, '../src/pages/writing');
+const IMAGE_DIR = join(__dirname, '../public/notion-images');
 
 const notion = new Client({ auth: process.env.NOTION_TOKEN });
 const n2m = new NotionToMarkdown({ notionClient: notion });
+
+// Notion file URLs expire after about an hour, so uploaded images are
+// copied into the repo and referenced by a site path instead
+mkdirSync(IMAGE_DIR, { recursive: true });
+n2m.setCustomTransformer('image', async (block) => {
+  const image = block.image;
+  const caption = image.caption?.map((t) => t.plain_text).join('') ?? '';
+  if (image.type === 'external') return `![${caption}](${image.external.url})`;
+
+  const url = image.file.url;
+  const name = `${block.id}${extname(new URL(url).pathname) || '.png'}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Image download failed (${res.status}) for block ${block.id}`);
+  writeFileSync(join(IMAGE_DIR, name), Buffer.from(await res.arrayBuffer()));
+  return `![${caption}](/notion-images/${name})`;
+});
 
 // Fetch all published articles from Notion
 const response = await notion.databases.query({
