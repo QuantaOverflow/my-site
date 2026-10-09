@@ -153,4 +153,28 @@ const dateStr = !date ? '' : date instanceof Date
     border-color: var(--border);
     margin: 2.5rem 0;
   }
+
+  /* Markdown content is slotted in, so these need :global to reach it */
+  article :global(img) {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 0 1.5rem;
+  }
+
+  article :global(table) {
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+    margin: 0 0 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  article :global(th),
+  article :global(td) {
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.7rem;
+    text-align: left;
+  }
 </style>
