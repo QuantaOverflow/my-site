@@ -74,6 +74,7 @@ const dateStr = !date ? '' : date instanceof Date
     margin-bottom: 1.5rem;
   }
 
+  /* Markdown content is slotted in, so descendant rules need :global to reach it */
   article {
     font-size: 1.1rem;
     line-height: 1.85;
@@ -84,34 +85,34 @@ const dateStr = !date ? '' : date instanceof Date
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
-  article p {
+  article :global(p) {
     margin: 0 0 1.5rem;
     color: var(--fg);
   }
 
-  article h2 {
+  article :global(h2) {
     font-size: 1.4rem;
     font-weight: 700;
     margin: 2.5rem 0 1rem;
   }
 
-  article h3 {
+  article :global(h3) {
     font-size: 1.15rem;
     font-weight: 700;
     margin: 2rem 0 0.75rem;
   }
 
-  article ul,
-  article ol {
+  article :global(ul),
+  article :global(ol) {
     margin: 0 0 1.5rem;
     padding-left: 1.5rem;
   }
 
-  article li {
+  article :global(li) {
     line-height: 1.8;
   }
 
-  article blockquote {
+  article :global(blockquote) {
     border-left: 3px solid var(--fg3);
     padding-left: 1.25rem;
     color: var(--fg2);
@@ -119,14 +120,14 @@ const dateStr = !date ? '' : date instanceof Date
     margin: 1.5rem 0;
   }
 
-  article code {
+  article :global(code) {
     background: rgba(255, 255, 255, 0.08);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
     font-size: 0.9em;
   }
 
-  article pre {
+  article :global(pre) {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
@@ -135,31 +136,29 @@ const dateStr = !date ? '' : date instanceof Date
     margin: 0 0 1.5rem;
   }
 
-  article pre code {
+  article :global(pre code) {
     background: transparent;
     padding: 0;
     font-size: 0.9rem;
   }
 
-  article a {
+  article :global(a) {
     color: var(--acc);
   }
 
-  article a:hover {
+  article :global(a:hover) {
     text-decoration: underline;
   }
 
-  article hr {
+  article :global(hr) {
     border-color: var(--border);
     margin: 2.5rem 0;
   }
 
-  /* Markdown content is slotted in, so these need :global to reach it */
   article :global(img) {
     display: block;
     max-width: 100%;
     height: auto;
-    margin: 0 0 1.5rem;
   }
 
   article :global(table) {
