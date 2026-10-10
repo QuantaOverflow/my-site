@@ -1,0 +1,4 @@
+# Figure sources for articles: one folder per slug, holding figures.py.
+# The rendered images are generated output; the published copies live in public/notion-images/.
+*.png
+*.svg
